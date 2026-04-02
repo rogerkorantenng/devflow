@@ -1,5 +1,9 @@
 import { streamText, stepCountIs } from "ai";
-import { openai } from "@ai-sdk/openai";
+import { createOpenAI } from "@ai-sdk/openai";
+
+const openai = createOpenAI({
+  compatibility: "compatible",
+});
 import { setAIContext } from "@auth0/ai-vercel";
 import { DEVFLOW_SYSTEM_PROMPT } from "@/lib/agent";
 import {
