@@ -1,5 +1,5 @@
 import { streamText, stepCountIs } from "ai";
-import { createOpenAI } from "@ai-sdk/openai";
+import { google } from "@ai-sdk/google";
 import { setAIContext } from "@auth0/ai-vercel";
 import { DEVFLOW_SYSTEM_PROMPT } from "@/lib/agent";
 import {
@@ -15,8 +15,6 @@ import {
   listVercelDeployments,
   getDeploymentStatus,
 } from "./tools";
-
-const openai = createOpenAI({});
 
 export async function POST(req: Request) {
   const { messages, threadId } = await req.json();
@@ -38,7 +36,7 @@ export async function POST(req: Request) {
   };
 
   const result = streamText({
-    model: openai.chat("gpt-4o"),
+    model: google("gemini-2.0-flash"),
     system: DEVFLOW_SYSTEM_PROMPT,
     messages,
     tools,
