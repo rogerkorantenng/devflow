@@ -11,7 +11,6 @@ import {
 } from "cmdk";
 import { Badge } from "@/components/ui/badge";
 import { COMMANDS, type Command } from "@/lib/commands";
-import { useChat } from "@ai-sdk/react";
 import { CommandResult } from "./command-result";
 
 export function CommandPalette() {
@@ -26,33 +25,6 @@ export function CommandPalette() {
     }>
   >([]);
 
-  const { append } = useChat({
-    api: "/api/agent",
-    onFinish: (message) => {
-      const text =
-        message.parts
-          ?.filter((p): p is { type: "text"; text: string } => p.type === "text")
-          .map((p) => p.text)
-          .join("\n") || "";
-      setResults((prev) =>
-        prev.map((r) =>
-          r.status === "running"
-            ? { ...r, status: "completed", result: text }
-            : r
-        )
-      );
-    },
-    onError: () => {
-      setResults((prev) =>
-        prev.map((r) =>
-          r.status === "running"
-            ? { ...r, status: "error", result: "Command failed" }
-            : r
-        )
-      );
-    },
-  });
-
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
@@ -64,20 +36,55 @@ export function CommandPalette() {
     return () => document.removeEventListener("keydown", handler);
   }, []);
 
-  const executeCommand = useCallback(
-    (cmd: Command) => {
-      setOpen(false);
-      const entry = {
-        command: cmd.label,
-        service: cmd.service,
-        status: "running" as const,
-        timestamp: new Date().toLocaleTimeString(),
-      };
-      setResults((prev) => [entry, ...prev]);
-      append({ role: "user", content: cmd.description });
-    },
-    [append]
-  );
+  const executeCommand = useCallback(async (cmd: Command) => {
+    setOpen(false);
+    const entry = {
+      command: cmd.label,
+      service: cmd.service,
+      status: "running" as const,
+      timestamp: new Date().toLocaleTimeString(),
+    };
+    setResults((prev) => [entry, ...prev]);
+
+    try {
+      const res = await fetch("/api/agent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: [{ role: "user", content: cmd.description }],
+        }),
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        setResults((prev) =>
+          prev.map((r) =>
+            r.status === "running"
+              ? { ...r, status: "error", result: `Error ${res.status}: ${errText}` }
+              : r
+          )
+        );
+        return;
+      }
+
+      const text = await res.text();
+      setResults((prev) =>
+        prev.map((r) =>
+          r.status === "running"
+            ? { ...r, status: "completed", result: text }
+            : r
+        )
+      );
+    } catch (err: any) {
+      setResults((prev) =>
+        prev.map((r) =>
+          r.status === "running"
+            ? { ...r, status: "error", result: err.message || "Command failed" }
+            : r
+        )
+      );
+    }
+  }, []);
 
   const scopeColor = (scope: string) =>
     scope === "read"
