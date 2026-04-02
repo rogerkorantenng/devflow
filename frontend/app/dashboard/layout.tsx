@@ -1,6 +1,7 @@
 import { getSession } from "@auth0/nextjs-auth0";
 import { redirect } from "next/navigation";
 import { NavSidebar } from "@/components/nav-sidebar";
+import { CommandPalette } from "@/components/command-palette/command-palette";
 
 export default async function DashboardLayout({
   children,
@@ -13,7 +14,15 @@ export default async function DashboardLayout({
   return (
     <div className="flex h-screen">
       <NavSidebar />
-      <main className="flex-1 overflow-auto p-8">{children}</main>
+      <main className="flex-1 overflow-auto p-8">
+        <div className="mb-4 flex justify-end">
+          <kbd className="rounded border border-zinc-700 bg-zinc-800 px-2 py-1 text-xs text-zinc-400">
+            Ctrl+K
+          </kbd>
+        </div>
+        <CommandPalette />
+        {children}
+      </main>
     </div>
   );
 }
