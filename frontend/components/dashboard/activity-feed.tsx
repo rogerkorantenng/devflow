@@ -17,7 +17,8 @@ export function ActivityFeed() {
   const [activities, setActivities] = useState<Activity[]>([]);
 
   useEffect(() => {
-    fetch("/api/activity?limit=20")
+    const username = localStorage.getItem("devflow_username") || "default";
+    fetch(`/api/activity?username=${username}&limit=20`)
       .then((r) => r.json())
       .then((data) => setActivities(data.entries || []))
       .catch(() => {});

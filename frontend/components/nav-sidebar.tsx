@@ -11,16 +11,19 @@ const navItems = [
 ];
 
 interface NavSidebarProps {
-  user: { email?: string; name?: string } | null;
+  username: string;
+  onLogout: () => void;
 }
 
-export function NavSidebar({ user }: NavSidebarProps) {
+export function NavSidebar({ username, onLogout }: NavSidebarProps) {
   const pathname = usePathname();
 
   return (
     <aside className="flex h-screen w-60 flex-col border-r border-zinc-800 bg-zinc-950 px-3 py-4">
       <div className="mb-8 px-3">
-        <h1 className="text-lg font-bold">DevFlow</h1>
+        <h1 className="text-lg font-bold">
+          Dev<span className="text-blue-400">Flow</span>
+        </h1>
         <p className="text-xs text-zinc-500">AI DevOps Command Center</p>
       </div>
       <nav className="flex flex-1 flex-col gap-1">
@@ -40,13 +43,13 @@ export function NavSidebar({ user }: NavSidebarProps) {
         ))}
       </nav>
       <div className="border-t border-zinc-800 pt-3 px-3">
-        <p className="text-xs text-zinc-500 truncate">{user?.email}</p>
-        <a
-          href="/auth/logout"
+        <p className="text-xs text-zinc-400 truncate mb-1">{username}</p>
+        <button
+          onClick={onLogout}
           className="text-xs text-red-400 hover:text-red-300"
         >
           Sign out
-        </a>
+        </button>
       </div>
     </aside>
   );

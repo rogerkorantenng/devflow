@@ -13,7 +13,8 @@ export default function PermissionsPage() {
   const [auditEntries, setAuditEntries] = useState<any[]>([]);
 
   useEffect(() => {
-    fetch("/api/services")
+    const username = localStorage.getItem("devflow_username") || "default";
+    fetch(`/api/services?username=${username}`)
       .then((r) => r.json())
       .then((data) => {
         const map: Record<string, boolean> = {};
@@ -24,7 +25,7 @@ export default function PermissionsPage() {
       })
       .catch(() => {});
 
-    fetch("/api/activity")
+    fetch(`/api/activity?username=${username}`)
       .then((r) => r.json())
       .then((data) => {
         setAuditEntries(data.entries || []);
@@ -33,11 +34,13 @@ export default function PermissionsPage() {
   }, []);
 
   const handleConnect = (serviceId: string) => {
-    window.location.href = `/api/services/${serviceId}/connect`;
+    const username = localStorage.getItem("devflow_username") || "default";
+    window.location.href = `/api/services/${serviceId}/connect?username=${username}`;
   };
 
   const handleDisconnect = async (serviceId: string) => {
-    await fetch(`/api/services/${serviceId}`, { method: "DELETE" });
+    const username = localStorage.getItem("devflow_username") || "default";
+    await fetch(`/api/services/${serviceId}?username=${username}`, { method: "DELETE" });
     setConnectedServices((prev) => ({ ...prev, [serviceId]: false }));
   };
 

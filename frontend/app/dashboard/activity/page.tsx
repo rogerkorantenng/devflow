@@ -22,7 +22,9 @@ export default function ActivityPage() {
   const [filter, setFilter] = useState<string | null>(null);
 
   useEffect(() => {
-    const params = filter ? `?service=${filter}` : "";
+    const username = localStorage.getItem("devflow_username") || "default";
+    let params = `?username=${username}`;
+    if (filter) params += `&service=${filter}`;
     fetch(`/api/activity${params}`)
       .then((r) => r.json())
       .then((d) => setActivities(d.entries || []))

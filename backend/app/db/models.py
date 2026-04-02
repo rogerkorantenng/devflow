@@ -6,16 +6,14 @@ from app.db.database import Base
 class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True)
-    auth0_id = Column(String, unique=True, nullable=False, index=True)
-    email = Column(String, nullable=False)
-    name = Column(String, default="")
+    username = Column(String, unique=True, nullable=False, index=True)
     created_at = Column(DateTime, server_default=func.now())
 
 
 class ConnectedService(Base):
     __tablename__ = "connected_services"
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    username = Column(String, nullable=False, index=True)
     service = Column(String, nullable=False)
     status = Column(String, default="active")
     connected_at = Column(DateTime, server_default=func.now())
@@ -25,7 +23,7 @@ class ConnectedService(Base):
 class Workflow(Base):
     __tablename__ = "workflows"
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    username = Column(String, nullable=False, index=True)
     name = Column(String, nullable=False)
     definition = Column(JSON, nullable=False)
     is_active = Column(Boolean, default=True)
@@ -47,7 +45,7 @@ class WorkflowRun(Base):
 class ActivityLog(Base):
     __tablename__ = "activity_log"
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    username = Column(String, nullable=False, index=True)
     service = Column(String, nullable=False)
     action = Column(String, nullable=False)
     scope_used = Column(String, default="")

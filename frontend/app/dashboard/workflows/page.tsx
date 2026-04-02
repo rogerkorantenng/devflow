@@ -17,19 +17,22 @@ export default function WorkflowsPage() {
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
 
   useEffect(() => {
-    fetch("/api/workflows")
+    const username = localStorage.getItem("devflow_username") || "default";
+    fetch(`/api/workflows?username=${username}`)
       .then((r) => r.json())
       .then((d) => setWorkflows(d.workflows || []))
       .catch(() => {});
   }, []);
 
   const createNew = async () => {
+    const username = localStorage.getItem("devflow_username") || "default";
     const res = await fetch("/api/workflows", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name: "New Workflow",
         definition: { nodes: [], edges: [] },
+        username,
       }),
     });
     const data = await res.json();

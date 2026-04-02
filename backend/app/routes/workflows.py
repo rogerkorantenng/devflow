@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.db.database import get_db
@@ -12,7 +12,7 @@ router = APIRouter(prefix="/workflows", tags=["workflows"])
 class WorkflowCreate(BaseModel):
     name: str
     definition: dict
-    user_id: int = 1
+    username: str = "default"
 
 
 class WorkflowUpdate(BaseModel):
@@ -22,8 +22,12 @@ class WorkflowUpdate(BaseModel):
 
 
 @router.get("")
-async def list_workflows(user_id: int = 1, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Workflow).where(Workflow.user_id == user_id))
+async def list_workflows(
+    username: str = Query("default"), db: AsyncSession = Depends(get_db)
+):
+    result = await db.execute(
+        select(Workflow).where(Workflow.username == username)
+    )
     workflows = result.scalars().all()
     return {
         "workflows": [
@@ -59,7 +63,7 @@ async def get_workflow(workflow_id: int, db: AsyncSession = Depends(get_db)):
 @router.post("")
 async def create_workflow(data: WorkflowCreate, db: AsyncSession = Depends(get_db)):
     workflow = Workflow(
-        user_id=data.user_id, name=data.name, definition=data.definition
+        username=data.username, name=data.name, definition=data.definition
     )
     db.add(workflow)
     await db.commit()

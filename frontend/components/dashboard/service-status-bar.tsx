@@ -8,7 +8,8 @@ export function ServiceStatusBar() {
   const [connected, setConnected] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    fetch("/api/services")
+    const username = localStorage.getItem("devflow_username") || "default";
+    fetch(`/api/services?username=${username}`)
       .then((r) => r.json())
       .then((data) => {
         const map: Record<string, boolean> = {};

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.db.database import get_db
@@ -10,13 +10,15 @@ router = APIRouter(prefix="/services", tags=["services"])
 
 class ServiceConnect(BaseModel):
     service: str
-    user_id: int = 1
+    username: str = "default"
 
 
 @router.get("")
-async def list_services(user_id: int = 1, db: AsyncSession = Depends(get_db)):
+async def list_services(
+    username: str = Query("default"), db: AsyncSession = Depends(get_db)
+):
     result = await db.execute(
-        select(ConnectedService).where(ConnectedService.user_id == user_id)
+        select(ConnectedService).where(ConnectedService.username == username)
     )
     services = result.scalars().all()
     return {
@@ -36,7 +38,7 @@ async def list_services(user_id: int = 1, db: AsyncSession = Depends(get_db)):
 @router.post("")
 async def connect_service(data: ServiceConnect, db: AsyncSession = Depends(get_db)):
     svc = ConnectedService(
-        user_id=data.user_id, service=data.service, status="active"
+        username=data.username, service=data.service, status="active"
     )
     db.add(svc)
     await db.commit()
@@ -46,11 +48,13 @@ async def connect_service(data: ServiceConnect, db: AsyncSession = Depends(get_d
 
 @router.delete("/{service_name}")
 async def disconnect_service(
-    service_name: str, user_id: int = 1, db: AsyncSession = Depends(get_db)
+    service_name: str,
+    username: str = Query("default"),
+    db: AsyncSession = Depends(get_db),
 ):
     result = await db.execute(
         select(ConnectedService).where(
-            ConnectedService.user_id == user_id,
+            ConnectedService.username == username,
             ConnectedService.service == service_name,
         )
     )

@@ -16,7 +16,8 @@ export function WorkflowGrid() {
   const [workflows, setWorkflows] = useState<WorkflowSummary[]>([]);
 
   useEffect(() => {
-    fetch("/api/workflows")
+    const username = localStorage.getItem("devflow_username") || "default";
+    fetch(`/api/workflows?username=${username}`)
       .then((r) => r.json())
       .then((data) => setWorkflows(data.workflows || []))
       .catch(() => {});

@@ -10,14 +10,14 @@ router = APIRouter(prefix="/activity", tags=["activity"])
 
 @router.get("")
 async def list_activity(
-    user_id: int = 1,
+    username: str = Query("default"),
     service: Optional[str] = Query(None),
     limit: int = Query(50, le=200),
     db: AsyncSession = Depends(get_db),
 ):
     query = (
         select(ActivityLog)
-        .where(ActivityLog.user_id == user_id)
+        .where(ActivityLog.username == username)
         .order_by(desc(ActivityLog.timestamp))
         .limit(limit)
     )

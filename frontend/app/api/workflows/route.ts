@@ -1,7 +1,9 @@
 import { backendFetch } from "@/lib/backend";
 
-export async function GET() {
-  const data = await backendFetch("/workflows");
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const username = searchParams.get("username") || "default";
+  const data = await backendFetch(`/workflows?username=${username}`);
   return Response.json(data);
 }
 
