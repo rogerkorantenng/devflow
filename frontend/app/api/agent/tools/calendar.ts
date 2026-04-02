@@ -1,5 +1,4 @@
-import { tool } from "ai";
-import { z } from "zod";
+import { tool, jsonSchema } from "ai";
 
 const getCalendarToken = () => process.env.GOOGLE_CALENDAR_TOKEN || "";
 
@@ -13,23 +12,21 @@ async function calendarFetch(path: string, token: string) {
 
 export const listUpcomingEvents = tool({
   description: "List upcoming calendar events for today or a specific date",
-  parameters: z.object({
-    date: z
-      .string()
-      .optional()
-      .describe("ISO date string (YYYY-MM-DD), defaults to today"),
+  parameters: jsonSchema({
+    type: "object",
+    properties: {
+      date: { type: "string", description: "ISO date string (YYYY-MM-DD), defaults to today" },
+    },
   }),
-  execute: async ({ date }) => {
+  execute: async ({ date }: { date?: string }) => {
     const token = getCalendarToken();
     const d = date ? new Date(date) : new Date();
     const start = new Date(d);
     start.setHours(0, 0, 0, 0);
     const end = new Date(d);
     end.setHours(23, 59, 59, 999);
-    const timeMin = start.toISOString();
-    const timeMax = end.toISOString();
     const data = await calendarFetch(
-      `/calendars/primary/events?timeMin=${timeMin}&timeMax=${timeMax}&singleEvents=true&orderBy=startTime`,
+      `/calendars/primary/events?timeMin=${start.toISOString()}&timeMax=${end.toISOString()}&singleEvents=true&orderBy=startTime`,
       token
     );
     return (data.items || []).map((e: any) => ({

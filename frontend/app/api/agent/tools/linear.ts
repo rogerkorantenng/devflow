@@ -1,5 +1,4 @@
-import { tool } from "ai";
-import { z } from "zod";
+import { tool, jsonSchema } from "ai";
 
 const getLinearToken = () => process.env.LINEAR_TOKEN || "";
 
@@ -24,10 +23,13 @@ async function linearGraphQL(
 
 export const listLinearIssues = tool({
   description: "List recent Linear issues",
-  parameters: z.object({
-    teamKey: z.string().optional().describe("Team key to filter by"),
+  parameters: jsonSchema({
+    type: "object",
+    properties: {
+      teamKey: { type: "string", description: "Team key to filter by" },
+    },
   }),
-  execute: async ({ teamKey }) => {
+  execute: async ({ teamKey }: { teamKey?: string }) => {
     const token = getLinearToken();
     const filter = teamKey
       ? `(filter: { team: { key: { eq: "${teamKey}" } } })`
@@ -42,18 +44,17 @@ export const listLinearIssues = tool({
 
 export const createLinearIssue = tool({
   description: "Create a new Linear issue",
-  parameters: z.object({
-    teamId: z.string().describe("Linear team ID"),
-    title: z.string(),
-    description: z.string().optional(),
-    priority: z
-      .number()
-      .min(0)
-      .max(4)
-      .optional()
-      .describe("0=none, 1=urgent, 2=high, 3=medium, 4=low"),
+  parameters: jsonSchema({
+    type: "object",
+    properties: {
+      teamId: { type: "string", description: "Linear team ID" },
+      title: { type: "string" },
+      description: { type: "string" },
+      priority: { type: "number", description: "0=none, 1=urgent, 2=high, 3=medium, 4=low" },
+    },
+    required: ["teamId", "title"],
   }),
-  execute: async ({ teamId, title, description, priority }) => {
+  execute: async ({ teamId, title, description, priority }: { teamId: string; title: string; description?: string; priority?: number }) => {
     const token = getLinearToken();
     const data = await linearGraphQL(
       `mutation($input: IssueCreateInput!) { issueCreate(input: $input) { success issue { id identifier title url } } }`,

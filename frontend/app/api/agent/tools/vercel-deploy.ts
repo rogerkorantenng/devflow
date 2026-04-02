@@ -1,5 +1,4 @@
-import { tool } from "ai";
-import { z } from "zod";
+import { tool, jsonSchema } from "ai";
 
 const getVercelToken = () => process.env.VERCEL_TOKEN || "";
 
@@ -18,10 +17,14 @@ async function vercelFetch(path: string, token: string, options?: RequestInit) {
 
 export const listVercelDeployments = tool({
   description: "List recent Vercel deployments for a project",
-  parameters: z.object({
-    projectId: z.string().describe("Vercel project ID or name"),
+  parameters: jsonSchema({
+    type: "object",
+    properties: {
+      projectId: { type: "string", description: "Vercel project ID or name" },
+    },
+    required: ["projectId"],
   }),
-  execute: async ({ projectId }) => {
+  execute: async ({ projectId }: { projectId: string }) => {
     const token = getVercelToken();
     const data = await vercelFetch(
       `/v6/deployments?projectId=${projectId}&limit=10`,
@@ -39,10 +42,14 @@ export const listVercelDeployments = tool({
 
 export const getDeploymentStatus = tool({
   description: "Get the status of a specific Vercel deployment",
-  parameters: z.object({
-    deploymentId: z.string(),
+  parameters: jsonSchema({
+    type: "object",
+    properties: {
+      deploymentId: { type: "string" },
+    },
+    required: ["deploymentId"],
   }),
-  execute: async ({ deploymentId }) => {
+  execute: async ({ deploymentId }: { deploymentId: string }) => {
     const token = getVercelToken();
     return await vercelFetch(`/v13/deployments/${deploymentId}`, token);
   },

@@ -1,5 +1,4 @@
-import { tool } from "ai";
-import { z } from "zod";
+import { tool, jsonSchema } from "ai";
 
 const getSlackToken = () => process.env.SLACK_TOKEN || "";
 
@@ -19,11 +18,15 @@ async function slackFetch(method: string, token: string, body?: Record<string, u
 
 export const postSlackMessage = tool({
   description: "Post a message to a Slack channel",
-  parameters: z.object({
-    channel: z.string().describe("Channel ID or name"),
-    text: z.string().describe("Message text (supports Slack markdown)"),
+  parameters: jsonSchema({
+    type: "object",
+    properties: {
+      channel: { type: "string", description: "Channel ID or name" },
+      text: { type: "string", description: "Message text (supports Slack markdown)" },
+    },
+    required: ["channel", "text"],
   }),
-  execute: async ({ channel, text }) => {
+  execute: async ({ channel, text }: { channel: string; text: string }) => {
     const token = getSlackToken();
     const result = await slackFetch("chat.postMessage", token, { channel, text });
     return { ok: true, channel: result.channel, ts: result.ts };
@@ -32,7 +35,10 @@ export const postSlackMessage = tool({
 
 export const listSlackChannels = tool({
   description: "List Slack channels the bot has access to",
-  parameters: z.object({}),
+  parameters: jsonSchema({
+    type: "object",
+    properties: {},
+  }),
   execute: async () => {
     const token = getSlackToken();
     const result = await slackFetch("conversations.list", token, {
