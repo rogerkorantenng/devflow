@@ -1,5 +1,5 @@
 import { Auth0AI } from "@auth0/ai-vercel";
-import { getSession } from "@auth0/nextjs-auth0";
+import { auth0 } from "./auth0";
 
 export const auth0AI = new Auth0AI({
   auth0: {
@@ -10,29 +10,32 @@ export const auth0AI = new Auth0AI({
 });
 
 async function getRefreshToken() {
-  const session = await getSession();
-  return session?.refreshToken ?? "";
+  const session = await auth0.getSession();
+  return session?.tokenSet?.refreshToken ?? "";
 }
 
-export const withGitHub = auth0AI.withTokenVault({
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Wrap = (t: any) => any;
+
+export const withGitHub: Wrap = auth0AI.withTokenVault({
   refreshToken: getRefreshToken,
   connection: "github",
   scopes: ["repo", "read:org"],
 });
 
-export const withSlack = auth0AI.withTokenVault({
+export const withSlack: Wrap = auth0AI.withTokenVault({
   refreshToken: getRefreshToken,
   connection: "slack",
   scopes: ["channels:read", "chat:write", "users:read"],
 });
 
-export const withLinear = auth0AI.withTokenVault({
+export const withLinear: Wrap = auth0AI.withTokenVault({
   refreshToken: getRefreshToken,
   connection: "linear",
   scopes: ["read", "issues:create", "issues:update"],
 });
 
-export const withGoogleCalendar = auth0AI.withTokenVault({
+export const withGoogleCalendar: Wrap = auth0AI.withTokenVault({
   refreshToken: getRefreshToken,
   connection: "google-oauth2",
   scopes: [
@@ -41,7 +44,7 @@ export const withGoogleCalendar = auth0AI.withTokenVault({
   ],
 });
 
-export const withVercel = auth0AI.withTokenVault({
+export const withVercel: Wrap = auth0AI.withTokenVault({
   refreshToken: getRefreshToken,
   connection: "vercel",
   scopes: ["read", "deployments:create"],

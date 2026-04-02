@@ -1,6 +1,5 @@
 import { streamText, stepCountIs } from "ai";
 import { setAIContext } from "@auth0/ai-vercel";
-import { errorSerializer } from "@auth0/ai-vercel/interruptions";
 import { DEVFLOW_SYSTEM_PROMPT } from "@/lib/agent";
 import {
   listRepoIssues,
@@ -41,7 +40,6 @@ export async function POST(req: Request) {
     messages,
     tools,
     stopWhen: stepCountIs(10),
-    onError: errorSerializer(),
   });
 
   return result.toUIMessageStreamResponse();

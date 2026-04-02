@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 const features = [
   {
     title: "Workflow Builder",
@@ -57,12 +55,12 @@ export default function Home() {
           tools — with your agent always under your control.
         </p>
         <div className="flex gap-4">
-          <Link
-            href="/api/auth/login"
+          <a
+            href="/auth/login"
             className="rounded-lg bg-white px-6 py-3 text-sm font-semibold text-zinc-900 hover:bg-zinc-200 transition"
           >
             Get Started
-          </Link>
+          </a>
           <a
             href="https://github.com"
             target="_blank"

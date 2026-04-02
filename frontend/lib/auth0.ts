@@ -1,12 +1,3 @@
-import { getSession } from "@auth0/nextjs-auth0";
+import { Auth0Client } from "@auth0/nextjs-auth0/server";
 
-export async function getRequiredSession() {
-  const session = await getSession();
-  if (!session) throw new Error("Not authenticated");
-  return session;
-}
-
-export async function getRefreshToken() {
-  const session = await getRequiredSession();
-  return session.refreshToken;
-}
+export const auth0 = new Auth0Client();

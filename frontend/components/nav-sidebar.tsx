@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useUser } from "@auth0/nextjs-auth0/client";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: "⌂" },
@@ -11,9 +10,12 @@ const navItems = [
   { href: "/dashboard/activity", label: "Activity", icon: "📋" },
 ];
 
-export function NavSidebar() {
+interface NavSidebarProps {
+  user: { email?: string; name?: string } | null;
+}
+
+export function NavSidebar({ user }: NavSidebarProps) {
   const pathname = usePathname();
-  const { user } = useUser();
 
   return (
     <aside className="flex h-screen w-60 flex-col border-r border-zinc-800 bg-zinc-950 px-3 py-4">
@@ -39,12 +41,12 @@ export function NavSidebar() {
       </nav>
       <div className="border-t border-zinc-800 pt-3 px-3">
         <p className="text-xs text-zinc-500 truncate">{user?.email}</p>
-        <Link
-          href="/api/auth/logout"
+        <a
+          href="/auth/logout"
           className="text-xs text-red-400 hover:text-red-300"
         >
           Sign out
-        </Link>
+        </a>
       </div>
     </aside>
   );

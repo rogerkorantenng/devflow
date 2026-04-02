@@ -1,9 +1,9 @@
 import { auth0AI } from "./token-vault";
+import { auth0 } from "./auth0";
 
 export const withDeployApproval = auth0AI.withAsyncAuthorization({
   userID: async () => {
-    const { getSession } = await import("@auth0/nextjs-auth0");
-    const session = await getSession();
+    const session = await auth0.getSession();
     return session?.user?.sub || "";
   },
   bindingMessage: async (params: { action: string; target: string }) =>
@@ -14,8 +14,7 @@ export const withDeployApproval = auth0AI.withAsyncAuthorization({
 
 export const withForceMergeApproval = auth0AI.withAsyncAuthorization({
   userID: async () => {
-    const { getSession } = await import("@auth0/nextjs-auth0");
-    const session = await getSession();
+    const session = await auth0.getSession();
     return session?.user?.sub || "";
   },
   bindingMessage: async (params: { pr: string; repo: string }) =>
