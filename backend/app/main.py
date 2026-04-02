@@ -10,7 +10,7 @@ from app.routes.services import router as services_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await init_db()
+    init_db()
     yield
 
 

@@ -1,42 +1,38 @@
-from fastapi import APIRouter, Depends, Query
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, desc
-from app.db.database import get_db
-from app.db.models import ActivityLog
+from fastapi import APIRouter, Query
 from typing import Optional
+from app.db.database import get_connection
 
 router = APIRouter(prefix="/activity", tags=["activity"])
 
 
 @router.get("")
-async def list_activity(
+def list_activity(
     username: str = Query("default"),
     service: Optional[str] = Query(None),
     limit: int = Query(50, le=200),
-    db: AsyncSession = Depends(get_db),
 ):
-    query = (
-        select(ActivityLog)
-        .where(ActivityLog.username == username)
-        .order_by(desc(ActivityLog.timestamp))
-        .limit(limit)
-    )
+    conn = get_connection()
+    query = "SELECT id, service, action, scope_used, step_up_required, step_up_approved, timestamp, details FROM activity_log WHERE username = ?"
+    params: list = [username]
     if service:
-        query = query.where(ActivityLog.service == service)
-    result = await db.execute(query)
-    entries = result.scalars().all()
+        query += " AND service = ?"
+        params.append(service)
+    query += " ORDER BY timestamp DESC LIMIT ?"
+    params.append(limit)
+    rows = conn.execute(query, params).fetchall()
+    conn.close()
     return {
         "entries": [
             {
-                "id": e.id,
-                "service": e.service,
-                "action": e.action,
-                "scope_used": e.scope_used,
-                "step_up_required": e.step_up_required,
-                "step_up_approved": e.step_up_approved,
-                "timestamp": str(e.timestamp),
-                "details": e.details,
+                "id": r["id"],
+                "service": r["service"],
+                "action": r["action"],
+                "scope_used": r["scope_used"],
+                "step_up_required": bool(r["step_up_required"]),
+                "step_up_approved": bool(r["step_up_approved"]) if r["step_up_approved"] is not None else None,
+                "timestamp": r["timestamp"],
+                "details": r["details"],
             }
-            for e in entries
+            for r in rows
         ]
     }

@@ -1,9 +1,6 @@
-from fastapi import APIRouter, Depends, Query
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from app.db.database import get_db
-from app.db.models import ConnectedService
+from fastapi import APIRouter, Query
 from pydantic import BaseModel
+from app.db.database import get_connection
 
 router = APIRouter(prefix="/services", tags=["services"])
 
@@ -14,52 +11,47 @@ class ServiceConnect(BaseModel):
 
 
 @router.get("")
-async def list_services(
-    username: str = Query("default"), db: AsyncSession = Depends(get_db)
-):
-    result = await db.execute(
-        select(ConnectedService).where(ConnectedService.username == username)
-    )
-    services = result.scalars().all()
+def list_services(username: str = Query("default")):
+    conn = get_connection()
+    rows = conn.execute(
+        "SELECT id, service, status, connected_at, last_used_at FROM connected_services WHERE username = ?",
+        (username,),
+    ).fetchall()
+    conn.close()
     return {
         "services": [
             {
-                "id": s.id,
-                "service": s.service,
-                "status": s.status,
-                "connected_at": str(s.connected_at),
-                "last_used_at": str(s.last_used_at) if s.last_used_at else None,
+                "id": r["id"],
+                "service": r["service"],
+                "status": r["status"],
+                "connected_at": r["connected_at"],
+                "last_used_at": r["last_used_at"],
             }
-            for s in services
+            for r in rows
         ]
     }
 
 
 @router.post("")
-async def connect_service(data: ServiceConnect, db: AsyncSession = Depends(get_db)):
-    svc = ConnectedService(
-        username=data.username, service=data.service, status="active"
+def connect_service(data: ServiceConnect):
+    conn = get_connection()
+    cursor = conn.execute(
+        "INSERT INTO connected_services (username, service, status) VALUES (?, ?, 'active')",
+        (data.username, data.service),
     )
-    db.add(svc)
-    await db.commit()
-    await db.refresh(svc)
-    return {"id": svc.id, "service": svc.service, "status": svc.status}
+    conn.commit()
+    svc_id = cursor.lastrowid
+    conn.close()
+    return {"id": svc_id, "service": data.service, "status": "active"}
 
 
 @router.delete("/{service_name}")
-async def disconnect_service(
-    service_name: str,
-    username: str = Query("default"),
-    db: AsyncSession = Depends(get_db),
-):
-    result = await db.execute(
-        select(ConnectedService).where(
-            ConnectedService.username == username,
-            ConnectedService.service == service_name,
-        )
+def disconnect_service(service_name: str, username: str = Query("default")):
+    conn = get_connection()
+    conn.execute(
+        "UPDATE connected_services SET status = 'revoked' WHERE username = ? AND service = ?",
+        (username, service_name),
     )
-    svc = result.scalar_one_or_none()
-    if svc:
-        svc.status = "revoked"
-        await db.commit()
+    conn.commit()
+    conn.close()
     return {"disconnected": True}
