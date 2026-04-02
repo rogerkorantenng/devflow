@@ -1,10 +1,9 @@
 import { tool } from "ai";
 import { z } from "zod";
-import { getAccessTokenFromTokenVault } from "@auth0/ai-vercel";
-import { withVercel } from "@/lib/token-vault";
 
-async function vercelFetch(path: string, options?: RequestInit) {
-  const token = getAccessTokenFromTokenVault();
+const getVercelToken = () => process.env.VERCEL_TOKEN || "";
+
+async function vercelFetch(path: string, token: string, options?: RequestInit) {
   const res = await fetch(`https://api.vercel.com${path}`, {
     ...options,
     headers: {
@@ -17,35 +16,34 @@ async function vercelFetch(path: string, options?: RequestInit) {
   return res.json();
 }
 
-export const listVercelDeployments = withVercel(
-  tool({
-    description: "List recent Vercel deployments for a project",
-    parameters: z.object({
-      projectId: z.string().describe("Vercel project ID or name"),
-    }),
-    execute: async ({ projectId }) => {
-      const data = await vercelFetch(
-        `/v6/deployments?projectId=${projectId}&limit=10`
-      );
-      return data.deployments.map((d: any) => ({
-        id: d.uid,
-        url: d.url,
-        state: d.state,
-        target: d.target,
-        createdAt: d.createdAt,
-      }));
-    },
-  })
-);
+export const listVercelDeployments = tool({
+  description: "List recent Vercel deployments for a project",
+  parameters: z.object({
+    projectId: z.string().describe("Vercel project ID or name"),
+  }),
+  execute: async ({ projectId }) => {
+    const token = getVercelToken();
+    const data = await vercelFetch(
+      `/v6/deployments?projectId=${projectId}&limit=10`,
+      token
+    );
+    return data.deployments.map((d: any) => ({
+      id: d.uid,
+      url: d.url,
+      state: d.state,
+      target: d.target,
+      createdAt: d.createdAt,
+    }));
+  },
+});
 
-export const getDeploymentStatus = withVercel(
-  tool({
-    description: "Get the status of a specific Vercel deployment",
-    parameters: z.object({
-      deploymentId: z.string(),
-    }),
-    execute: async ({ deploymentId }) => {
-      return await vercelFetch(`/v13/deployments/${deploymentId}`);
-    },
-  })
-);
+export const getDeploymentStatus = tool({
+  description: "Get the status of a specific Vercel deployment",
+  parameters: z.object({
+    deploymentId: z.string(),
+  }),
+  execute: async ({ deploymentId }) => {
+    const token = getVercelToken();
+    return await vercelFetch(`/v13/deployments/${deploymentId}`, token);
+  },
+});

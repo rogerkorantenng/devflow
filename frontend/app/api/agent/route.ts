@@ -1,4 +1,5 @@
 import { streamText, stepCountIs } from "ai";
+import { openai } from "@ai-sdk/openai";
 import { setAIContext } from "@auth0/ai-vercel";
 import { DEVFLOW_SYSTEM_PROMPT } from "@/lib/agent";
 import {
@@ -35,7 +36,7 @@ export async function POST(req: Request) {
   };
 
   const result = streamText({
-    model: "openai/gpt-5.4",
+    model: openai("gpt-4o"),
     system: DEVFLOW_SYSTEM_PROMPT,
     messages,
     tools,
